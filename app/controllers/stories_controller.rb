@@ -1,6 +1,7 @@
 class StoriesController < ApplicationController
   before_action :set_story, only: [:show, :edit, :update, :destroy]
-
+  before_action :check_sign_in, except: [:index]
+  before_action :check_owner, only: [:edit, :update ,:destroy]
   # GET /stories
   # GET /stories.json
   def index
@@ -25,7 +26,8 @@ class StoriesController < ApplicationController
   # POST /stories.json
   def create
     @story = Story.new(story_params)
-
+    @story.user = helpers.current_user if helpers.logged?
+    # @story.user = current_user
     respond_to do |format|
       if @story.save
         format.html { redirect_to @story, notice: 'Story was successfully created.' }
@@ -71,4 +73,12 @@ class StoriesController < ApplicationController
     def story_params
       params.require(:story).permit(:title, :picture, :content)
     end
-end
+
+    def check_sign_in
+      redirect_to root_path , alert: 'Acceso no Autorizado'  if !helpers.logged?
+    end
+
+    def check_owner
+      redirect_to root_path , alert: 'Acceso no Autorizado'  if @story.user != helpers.current_user
+    end
+  end
